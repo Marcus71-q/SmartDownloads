@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # 3.x currently fails on the .NET 8 server runtime used by Render.
+      - dependency-name: StackExchange.Redis
+        versions: [">= 3.0.0"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
