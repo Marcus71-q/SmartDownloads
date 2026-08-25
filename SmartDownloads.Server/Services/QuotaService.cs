@@ -12,7 +12,7 @@ public sealed class QuotaService : IAsyncDisposable
     {
         var url = Environment.GetEnvironmentVariable("REDIS_URL");
         if (!string.IsNullOrWhiteSpace(url))
-            _redis = new Lazy<Task<ConnectionMultiplexer>>(() => ConnectionMultiplexer.ConnectAsync(url));
+            _redis = new Lazy<Task<ConnectionMultiplexer>>(() => ConnectionMultiplexer.ConnectAsync(CreateRedisOptions(url)));
     }
 
     public Task<(bool Allowed, int Remaining)> TryConsumeDeviceAsync(Guid deviceId)
@@ -53,9 +53,47 @@ public sealed class QuotaService : IAsyncDisposable
     private static int ReadLimit(string name, int fallback, int minimum, int maximum) =>
         int.TryParse(Environment.GetEnvironmentVariable(name), out var configured) ? Math.Clamp(configured, minimum, maximum) : fallback;
 
+    private static ConfigurationOptions CreateRedisOptions(string value)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) ||
+            (uri.Scheme != "redis" && uri.Scheme != "rediss"))
+        {
+            var parsed = ConfigurationOptions.Parse(value);
+            parsed.AbortOnConnectFail = false;
+            return parsed;
+        }
+
+        var options = new ConfigurationOptions
+        {
+            AbortOnConnectFail = false,
+            ConnectRetry = 3,
+            ConnectTimeout = 5_000,
+            Ssl = uri.Scheme == "rediss"
+        };
+        options.EndPoints.Add(uri.Host, uri.IsDefaultPort ? 6379 : uri.Port);
+
+        if (!string.IsNullOrEmpty(uri.UserInfo))
+        {
+            var credentials = uri.UserInfo.Split(':', 2);
+            if (credentials.Length == 2)
+            {
+                options.User = Uri.UnescapeDataString(credentials[0]);
+                options.Password = Uri.UnescapeDataString(credentials[1]);
+            }
+            else
+            {
+                options.Password = Uri.UnescapeDataString(credentials[0]);
+            }
+        }
+
+        return options;
+    }
+
     public async ValueTask DisposeAsync()
     {
-        if (_redis?.IsValueCreated == true) (await _redis.Value).Dispose();
+        if (_redis?.IsValueCreated != true) return;
+        try { (await _redis.Value).Dispose(); }
+        catch (RedisException) { }
     }
 }
 
