@@ -1,20 +1,19 @@
 # Privacy
 
-Smart Downloads performs all file movement locally.
+Smart Downloads performs file movement locally and asks for consent before enabling server-assisted classification.
 
-## Metadata sent to the server
+## Metadata sent
 
-- File or folder name
-- Extension and byte size
-- Up to 100 ZIP entry names (names only, no extracted content)
-- Optional Windows file description, product name, and publisher
-- A pseudonymous installation identifier used for abuse protection
+- File name
+- Extension
+- Byte size
+- Whether the item is a file or directory
+- A pseudonymous installation identifier used for authentication and abuse protection
 
-## Data never sent
+Directories are not automatically moved. ZIP entry names, executable version fields, file bytes, document contents, images, videos, audio, browser data, passwords, Windows account details, and user API keys are not sent.
 
-- File bytes or document contents
-- Images, videos, audio, or executable payloads
-- User API keys
-- Windows account password or browser data
+The client sends requests to the configured Smart Downloads HTTPS server. The reference deployment uses Render for hosting and Google's Gemini API for classification. Those infrastructure providers can retain operational network and service logs under their own policies.
 
-The reference server does not intentionally persist classification requests or model responses. Infrastructure providers may retain operational network logs according to their own policies. Operators must disclose any production logging changes.
+The reference server does not intentionally persist classification metadata or model responses. It stores only bounded daily usage counters in Redis-compatible quota storage. In-memory classification cache entries expire after at most seven days and are lost on restart.
+
+The desktop app stores settings, an encrypted device token, and a size-limited operational log under `%LOCALAPPDATA%\SmartDownloads`. The log does not contain downloaded file names. Remove that directory after exiting the app to erase local app data.

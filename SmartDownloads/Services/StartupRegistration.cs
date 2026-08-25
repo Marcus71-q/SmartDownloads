@@ -14,4 +14,24 @@ public static class StartupRegistration
         }
         catch { }
     }
+
+    public static void Disable()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+            key?.DeleteValue("SmartDownloads", false);
+        }
+        catch { }
+    }
+
+    public static bool IsEnabled()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", false);
+            return key?.GetValue("SmartDownloads") is string;
+        }
+        catch { return false; }
+    }
 }

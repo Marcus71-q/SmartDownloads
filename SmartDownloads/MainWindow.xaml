@@ -22,7 +22,7 @@
  <Grid MouseLeftButtonDown="Window_MouseLeftButtonDown">
   <Grid.Background><RadialGradientBrush Center="0.5,0.08" GradientOrigin="0.5,0.08" RadiusX="0.9" RadiusY="0.9"><GradientStop Color="#24205C"/><GradientStop Color="#0A0D18" Offset="0.58"/></RadialGradientBrush></Grid.Background>
   <Button Content="×" Width="42" Height="42" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,14,0" FontSize="24" Foreground="#A6ADC8" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Close_Click" Panel.ZIndex="5"/>
-  <Grid x:Name="LanguageView" MaxWidth="820" Margin="54,34,54,44"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Grid x:Name="LanguageView" MaxWidth="820" Margin="54,25,54,32"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
    <StackPanel Grid.Row="0" HorizontalAlignment="Center">
     <Grid Width="76" Height="76" Margin="0,5,0,14"><Ellipse Fill="#7C5CFF"/><Ellipse Width="54" Height="54" Fill="#A796FF" Opacity=".28"/><Path Data="M 27,25 L 55,25 L 55,47 L 46,47 L 41,55 L 36,47 L 27,47 Z" Fill="White" Stretch="Uniform" Margin="18"/></Grid>
     <TextBlock x:Name="WelcomeTitle" Text="Choose your language" FontSize="31" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center"/>
@@ -35,7 +35,9 @@
     <RadioButton x:Name="HindiOption" GroupName="Language" Tag="🇮🇳" Style="{StaticResource LanguageButton}" Checked="Language_Checked"><StackPanel><TextBlock Text="हिन्दी" FontFamily="Nirmala UI" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="ऐप और फ़ोल्डर हिन्दी में" FontFamily="Nirmala UI" FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,4,0,0"/></StackPanel></RadioButton>
    </UniformGrid>
    <Border Grid.Row="2" Background="#101526" BorderBrush="#242D49" BorderThickness="1" CornerRadius="13" Padding="18,13" Margin="8,0,8,14"><TextBlock x:Name="LanguageConfirmation" Text="The application and folder names will be in English." Foreground="#C7CCE0" HorizontalAlignment="Center" FontSize="14"/></Border>
-   <Button Grid.Row="3" x:Name="ContinueButton" Content="Continue" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Center" Click="Continue_Click"/>
+   <CheckBox Grid.Row="3" x:Name="PrivacyConsent" Margin="14,0,14,10" Foreground="{StaticResource TextPrimary}" FontSize="13" Checked="Consent_Changed" Unchecked="Consent_Changed"><TextBlock x:Name="PrivacyConsentText" TextWrapping="Wrap"/></CheckBox>
+   <CheckBox Grid.Row="4" x:Name="ExistingFilesOption" Margin="14,0,14,12" Foreground="{StaticResource TextMuted}" FontSize="13"><TextBlock x:Name="ExistingFilesText" TextWrapping="Wrap"/></CheckBox>
+   <Button Grid.Row="5" x:Name="ContinueButton" Content="Continue" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Center" Click="Continue_Click" IsEnabled="False"/>
   </Grid>
   <Grid x:Name="PreparingView" Visibility="Collapsed" MaxWidth="680" Margin="70"><StackPanel VerticalAlignment="Center">
    <Grid Width="96" Height="96" HorizontalAlignment="Center"><Ellipse Stroke="#272F50" StrokeThickness="7"/><Ellipse Stroke="#7C5CFF" StrokeThickness="7" StrokeDashArray="2.3,1" RenderTransformOrigin=".5,.5"><Ellipse.RenderTransform><RotateTransform x:Name="RingRotation"/></Ellipse.RenderTransform></Ellipse><TextBlock Text="✦" FontSize="30" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/></Grid>

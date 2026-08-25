@@ -1,11 +1,9 @@
 using SmartDownloads.Services;
-using System.IO.Compression;
 
 var root = Path.Combine(Path.GetTempPath(), "SmartDownloads-SmokeTests", Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
 try
 {
-    var organizer = new DownloadOrganizer("en", root);
     var image = Path.Combine(root, "holiday-photo.jpg");
     var partial = Path.Combine(root, "large-video.mp4.crdownload");
     File.WriteAllText(image, "image-test");
@@ -13,15 +11,13 @@ try
     File.SetLastWriteTimeUtc(image, DateTime.UtcNow.AddMinutes(-2));
     File.SetLastWriteTimeUtc(partial, DateTime.UtcNow.AddMinutes(-2));
     var zipPath = Path.Combine(root, "sample.zip");
-    using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
-    {
-        var entry = archive.CreateEntry("mods/loader.dll");
-        using var writer = new StreamWriter(entry.Open()); writer.Write("secret-content-must-not-be-collected");
-    }
+    File.WriteAllText(zipPath, "not-opened-by-metadata-collector");
     var metadata = FileMetadataCollector.Collect(new FileInfo(zipPath));
-    Assert(metadata.ArchiveEntryNames?.Single() == "mods/loader.dll", "ZIP metadata names were not collected safely.");
-    Assert(!metadata.ToString().Contains("secret-content", StringComparison.Ordinal), "ZIP content leaked into metadata.");
+    Assert(metadata.ArchiveEntryNames is null, "Archive entries must not be opened or collected.");
+    Assert(metadata.WindowsDescription is null && metadata.Publisher is null, "Executable internals must not be inspected.");
 
+    var organizer = new DownloadOrganizer("en", root);
+    organizer.Start();
     await organizer.ScanNowAsync();
     await organizer.ScanNowAsync();
     Assert(File.Exists(Path.Combine(root, "04_Images", "holiday-photo.jpg")), "Image was not classified correctly.");
@@ -33,8 +29,20 @@ try
     await organizer.ScanNowAsync();
     await organizer.ScanNowAsync();
     Assert(File.Exists(Path.Combine(root, "04_Images", "holiday-photo (2).jpg")), "Duplicate name was overwritten instead of renamed.");
+    Assert(organizer.TryUndoLastMove(), "Last move could not be undone.");
+    Assert(File.Exists(duplicate), "Undo did not restore the original path.");
     organizer.Dispose();
-    Console.WriteLine("PASS: classification, partial-download protection, duplicate-name protection, metadata minimization");
+
+    var safeDefaultRoot = Path.Combine(root, "safe-default");
+    Directory.CreateDirectory(safeDefaultRoot);
+    var oldFile = Path.Combine(safeDefaultRoot, "existing.jpg");
+    File.WriteAllText(oldFile, "existing");
+    File.SetLastWriteTimeUtc(oldFile, DateTime.UtcNow.AddMinutes(-2));
+    using var safeDefault = new DownloadOrganizer(new SmartDownloads.Core.AppSettings("en", true, true, false), safeDefaultRoot, false);
+    await safeDefault.ScanNowAsync();
+    await safeDefault.ScanNowAsync();
+    Assert(File.Exists(oldFile), "Existing files must remain untouched by default.");
+    Console.WriteLine("PASS: safe-new-file mode, classification, partial-download protection, duplicate protection, undo, metadata minimization");
 }
 finally
 {

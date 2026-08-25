@@ -17,20 +17,25 @@ public sealed class DownloadOrganizer : IDisposable
     private readonly PeriodicTimer _timer = new(TimeSpan.FromSeconds(12));
     private readonly CancellationTokenSource _stop = new();
     private readonly string _logFile;
+    private readonly bool _processExisting;
+    private readonly ConcurrentStack<(string Source, string Destination)> _moves = new();
 
-    public DownloadOrganizer(string language, string? downloadsPath = null) : this(new AppSettings(language, true), downloadsPath, downloadsPath is null) { }
+    public DownloadOrganizer(string language, string? downloadsPath = null) : this(new AppSettings(language, true), downloadsPath, false, true) { }
 
-    public DownloadOrganizer(AppSettings settings, string? downloadsPath = null, bool enableAi = true)
+    public DownloadOrganizer(AppSettings settings, string? downloadsPath = null, bool enableAi = true, bool? processExisting = null)
     {
-        _downloads = downloadsPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        _downloads = downloadsPath ?? DownloadsPathResolver.Resolve();
         _folders = FolderCatalog.ForLanguage(settings.Language);
-        if (enableAi) _ai = new AiClassificationClient(settings);
+        _processExisting = processExisting ?? settings.OrganizeExistingFiles;
+        if (enableAi && settings.MetadataConsent) _ai = new AiClassificationClient(settings);
         var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartDownloads");
         Directory.CreateDirectory(dataDir);
         _logFile = Path.Combine(dataDir, "organizer.log");
         foreach (var folder in _folders.Values) Directory.CreateDirectory(Path.Combine(_downloads, folder));
         _watcher = new FileSystemWatcher(_downloads) { IncludeSubdirectories = false, NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size | NotifyFilters.LastWrite };
         _watcher.Created += OnChanged; _watcher.Changed += OnChanged; _watcher.Renamed += OnRenamed;
+        if (_processExisting)
+            foreach (var path in Directory.EnumerateFiles(_downloads)) _observations.TryAdd(path, default);
     }
 
     public void Start()
@@ -42,8 +47,16 @@ public sealed class DownloadOrganizer : IDisposable
 
     public Task ScanNowAsync(CancellationToken token = default) => ScanAsync(token);
 
-    private void OnChanged(object sender, FileSystemEventArgs e) => _observations.TryRemove(e.FullPath, out _);
-    private void OnRenamed(object sender, RenamedEventArgs e) { _observations.TryRemove(e.OldFullPath, out _); _observations.TryRemove(e.FullPath, out _); }
+    private void OnChanged(object sender, FileSystemEventArgs e)
+    {
+        if (Path.GetDirectoryName(e.FullPath)?.Equals(_downloads, StringComparison.OrdinalIgnoreCase) == true)
+            _observations[e.FullPath] = default;
+    }
+    private void OnRenamed(object sender, RenamedEventArgs e)
+    {
+        _observations.TryRemove(e.OldFullPath, out _);
+        OnChanged(sender, e);
+    }
 
     private async Task RunLoopAsync(CancellationToken token)
     {
@@ -59,13 +72,15 @@ public sealed class DownloadOrganizer : IDisposable
         if (!await _scanLock.WaitAsync(0, token)) return;
         try
         {
-            foreach (var path in Directory.EnumerateFileSystemEntries(_downloads))
+            foreach (var path in _observations.Keys.ToArray())
             {
                 token.ThrowIfCancellationRequested();
                 try
                 {
-                    var item = Directory.Exists(path) ? (FileSystemInfo)new DirectoryInfo(path) : new FileInfo(path);
-                    if (ShouldIgnore(item) || !IsStable(item)) continue;
+                    if (!File.Exists(path)) { _observations.TryRemove(path, out _); continue; }
+                    var item = new FileInfo(path);
+                    if (ShouldIgnore(item)) { if (!PartialExtensions.Contains(item.Extension, StringComparer.OrdinalIgnoreCase)) _observations.TryRemove(path, out _); continue; }
+                    if (!IsStable(item)) continue;
                     var category = _ai is null ? null : await _ai.ClassifyAsync(item, token);
                     MoveSafely(item, category ?? _classifier.Classify(item));
                     _observations.TryRemove(path, out _);
@@ -83,11 +98,6 @@ public sealed class DownloadOrganizer : IDisposable
         if (item.Name.Equals("desktop.ini", StringComparison.OrdinalIgnoreCase) || FolderCatalog.IsManagedFolder(item.Name)) return true;
         if (item is FileInfo && PartialExtensions.Contains(item.Extension, StringComparer.OrdinalIgnoreCase)) return true;
         if (DateTime.UtcNow - item.LastWriteTimeUtc < TimeSpan.FromSeconds(20)) return true;
-        if (item is DirectoryInfo directory)
-        {
-            try { return directory.EnumerateFiles("*", SearchOption.AllDirectories).Any(x => PartialExtensions.Contains(x.Extension, StringComparer.OrdinalIgnoreCase)); }
-            catch { return true; }
-        }
         return false;
     }
 
@@ -99,11 +109,6 @@ public sealed class DownloadOrganizer : IDisposable
         {
             _observations[item.FullName] = current;
             return false;
-        }
-        if (item is FileInfo)
-        {
-            try { using var stream = File.Open(item.FullName, FileMode.Open, FileAccess.Read, FileShare.None); }
-            catch { return false; }
         }
         return true;
     }
@@ -119,13 +124,35 @@ public sealed class DownloadOrganizer : IDisposable
             var number = 2;
             do { destination = Path.Combine(destinationDirectory, $"{baseName} ({number++}){extension}"); } while (File.Exists(destination) || Directory.Exists(destination));
         }
-        if (item is FileInfo) File.Move(item.FullName, destination); else Directory.Move(item.FullName, destination);
-        Log($"{item.Name} -> {category}");
+        File.Move(item.FullName, destination);
+        _moves.Push((item.FullName, destination));
+        Log($"Moved one item to {category}.");
+    }
+
+    public bool TryUndoLastMove()
+    {
+        while (_moves.TryPop(out var move))
+        {
+            try
+            {
+                if (!File.Exists(move.Destination) || File.Exists(move.Source)) continue;
+                File.Move(move.Destination, move.Source);
+                Log("Undid one move.");
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
     }
 
     private void Log(string message)
     {
-        try { File.AppendAllText(_logFile, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}  {message}{Environment.NewLine}"); } catch { }
+        try
+        {
+            if (File.Exists(_logFile) && new FileInfo(_logFile).Length > 1_000_000) File.WriteAllText(_logFile, "Log rotated." + Environment.NewLine);
+            File.AppendAllText(_logFile, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}  {message}{Environment.NewLine}");
+        }
+        catch { }
     }
 
     public void Dispose()

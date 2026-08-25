@@ -12,7 +12,7 @@ public sealed class AiClassificationClient : IDisposable
 {
     private readonly AppSettings _settings; private readonly HttpClient _http; private string? _token;
     public AiClassificationClient(AppSettings settings, HttpMessageHandler? handler = null)
-    { _settings = settings; _http = handler is null ? new HttpClient() : new HttpClient(handler); _http.BaseAddress = new Uri(settings.ServerUrl.TrimEnd('/') + "/"); _http.Timeout = TimeSpan.FromSeconds(12); _http.DefaultRequestHeaders.UserAgent.ParseAdd("SmartDownloads/1.0"); _token = LoadToken(); }
+    { _settings = settings; _http = handler is null ? new HttpClient() : new HttpClient(handler); _http.BaseAddress = new Uri(settings.ServerUrl.TrimEnd('/') + "/"); _http.Timeout = TimeSpan.FromSeconds(75); _http.DefaultRequestHeaders.UserAgent.ParseAdd("SmartDownloads/0.2"); _token = LoadToken(); }
     public async Task<DownloadCategory?> ClassifyAsync(FileSystemInfo item, CancellationToken token)
     {
         try { if (string.IsNullOrWhiteSpace(_token)) await RegisterAsync(token); var result = await SendAsync(item, token); if (result.Status != HttpStatusCode.Unauthorized) return result.Category; _token = null; await RegisterAsync(token); return (await SendAsync(item, token)).Category; }

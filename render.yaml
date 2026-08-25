@@ -16,4 +16,17 @@ services:
       - key: GEMINI_MODEL
         value: gemini-3.6-flash
       - key: GLOBAL_DAILY_AI_LIMIT
-        value: "50000"
+        value: "1000"
+      - key: DEVICE_DAILY_AI_LIMIT
+        value: "500"
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: smartdownloads-quota
+          property: connectionString
+  - type: keyvalue
+    name: smartdownloads-quota
+    plan: free
+    region: frankfurt
+    ipAllowList: []
+    maxmemoryPolicy: noeviction

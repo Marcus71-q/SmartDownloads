@@ -8,6 +8,11 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>SmartDownloads</AssemblyName>
+    <Version>0.2.0</Version>
+    <Product>Smart Downloads</Product>
+    <Company>Smart Downloads contributors</Company>
+    <Description>Privacy-conscious automatic Downloads organizer for Windows.</Description>
+    <RepositoryUrl>https://github.com/Marcus71-q/SmartDownloads</RepositoryUrl>
     <SmartDownloadsServerUrl Condition="'$(SmartDownloadsServerUrl)' == ''">https://api.smartdownloads.app</SmartDownloadsServerUrl>
   </PropertyGroup>
   <ItemGroup>

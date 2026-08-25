@@ -5,10 +5,13 @@ public sealed record AppSettings
 {
     public string Language { get; init; } = "en";
     public bool SetupCompleted { get; init; }
+    public bool MetadataConsent { get; init; }
+    public bool OrganizeExistingFiles { get; init; }
     public Guid InstallationId { get; init; } = Guid.NewGuid();
     public string ServerUrl { get; init; } = BuildConfiguration.ServerUrl;
     public AppSettings() { }
-    public AppSettings(string language, bool setupCompleted) { Language = language; SetupCompleted = setupCompleted; }
+    public AppSettings(string language, bool setupCompleted, bool metadataConsent = false, bool organizeExistingFiles = false)
+    { Language = language; SetupCompleted = setupCompleted; MetadataConsent = metadataConsent; OrganizeExistingFiles = organizeExistingFiles; }
     private static string DirectoryPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartDownloads");
     public static string FilePath => Path.Combine(DirectoryPath, "settings.json");
     public static string TokenPath => Path.Combine(DirectoryPath, "device-token.bin");

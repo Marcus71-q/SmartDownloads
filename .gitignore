@@ -19,3 +19,4 @@ secrets.json
 *.log
 artifacts/
 publish/
+.tmp-server-test/
