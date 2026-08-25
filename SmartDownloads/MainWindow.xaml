@@ -1,0 +1,51 @@
+<Window x:Class="SmartDownloads.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="Smart Downloads" Width="1040" Height="720" MinWidth="900" MinHeight="640" WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResizeWithGrip" Background="#0A0D18" FontFamily="Segoe UI">
+ <Window.Resources>
+  <SolidColorBrush x:Key="TextPrimary" Color="#F7F8FF"/><SolidColorBrush x:Key="TextMuted" Color="#A6ADC8"/>
+  <Style x:Key="LanguageButton" TargetType="RadioButton">
+   <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/><Setter Property="Background" Value="#13182A"/><Setter Property="BorderBrush" Value="#27304E"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Margin" Value="8"/><Setter Property="Cursor" Value="Hand"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+    <Border x:Name="Card" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="18" Padding="22,18">
+     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <TextBlock Grid.Column="0" Text="{TemplateBinding Tag}" FontSize="31" VerticalAlignment="Center" Margin="0,0,16,0"/><ContentPresenter Grid.Column="1" VerticalAlignment="Center"/>
+      <Border x:Name="Check" Grid.Column="2" Width="25" Height="25" CornerRadius="13" BorderThickness="2" BorderBrush="#465070"><TextBlock x:Name="Tick" Text="✓" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/></Border>
+     </Grid>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Card" Property="BorderBrush" Value="#6D58D9"/><Setter TargetName="Card" Property="Background" Value="#171D32"/></Trigger>
+     <Trigger Property="IsChecked" Value="True"><Setter TargetName="Card" Property="BorderBrush" Value="#8C72FF"/><Setter TargetName="Card" Property="Background" Value="#211B40"/><Setter TargetName="Check" Property="Background" Value="#7C5CFF"/><Setter TargetName="Check" Property="BorderBrush" Value="#7C5CFF"/><Setter TargetName="Tick" Property="Visibility" Value="Visible"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style x:Key="PrimaryButton" TargetType="Button"><Setter Property="Foreground" Value="White"/><Setter Property="Background" Value="#7C5CFF"/><Setter Property="BorderThickness" Value="0"/><Setter Property="FontSize" Value="15"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Padding" Value="34,14"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="B" Background="{TemplateBinding Background}" CornerRadius="13" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="Background" Value="#917AFF"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+ </Window.Resources>
+ <Grid MouseLeftButtonDown="Window_MouseLeftButtonDown">
+  <Grid.Background><RadialGradientBrush Center="0.5,0.08" GradientOrigin="0.5,0.08" RadiusX="0.9" RadiusY="0.9"><GradientStop Color="#24205C"/><GradientStop Color="#0A0D18" Offset="0.58"/></RadialGradientBrush></Grid.Background>
+  <Button Content="×" Width="42" Height="42" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,14,0" FontSize="24" Foreground="#A6ADC8" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Close_Click" Panel.ZIndex="5"/>
+  <Grid x:Name="LanguageView" MaxWidth="820" Margin="54,34,54,44"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+    <Grid Width="76" Height="76" Margin="0,5,0,14"><Ellipse Fill="#7C5CFF"/><Ellipse Width="54" Height="54" Fill="#A796FF" Opacity=".28"/><Path Data="M 27,25 L 55,25 L 55,47 L 46,47 L 41,55 L 36,47 L 27,47 Z" Fill="White" Stretch="Uniform" Margin="18"/></Grid>
+    <TextBlock x:Name="WelcomeTitle" Text="Choose your language" FontSize="31" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center"/>
+    <TextBlock x:Name="WelcomeSubtitle" Text="The app and folder names will use your selected language." FontSize="15" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,9,0,18"/>
+   </StackPanel>
+   <UniformGrid Grid.Row="1" Columns="2" Rows="2" Margin="0,0,0,10">
+    <RadioButton x:Name="TurkishOption" GroupName="Language" Tag="🇹🇷" Style="{StaticResource LanguageButton}" Checked="Language_Checked"><StackPanel><TextBlock Text="Türkçe" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="Program ve klasörler Türkçe" FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,4,0,0"/></StackPanel></RadioButton>
+    <RadioButton x:Name="EnglishOption" GroupName="Language" Tag="🇬🇧" Style="{StaticResource LanguageButton}" Checked="Language_Checked"><StackPanel><TextBlock Text="English" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="App and folders in English" FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,4,0,0"/></StackPanel></RadioButton>
+    <RadioButton x:Name="RussianOption" GroupName="Language" Tag="🇷🇺" Style="{StaticResource LanguageButton}" Checked="Language_Checked"><StackPanel><TextBlock Text="Русский" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="Программа и папки на русском" FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,4,0,0"/></StackPanel></RadioButton>
+    <RadioButton x:Name="HindiOption" GroupName="Language" Tag="🇮🇳" Style="{StaticResource LanguageButton}" Checked="Language_Checked"><StackPanel><TextBlock Text="हिन्दी" FontFamily="Nirmala UI" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="ऐप और फ़ोल्डर हिन्दी में" FontFamily="Nirmala UI" FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,4,0,0"/></StackPanel></RadioButton>
+   </UniformGrid>
+   <Border Grid.Row="2" Background="#101526" BorderBrush="#242D49" BorderThickness="1" CornerRadius="13" Padding="18,13" Margin="8,0,8,14"><TextBlock x:Name="LanguageConfirmation" Text="The application and folder names will be in English." Foreground="#C7CCE0" HorizontalAlignment="Center" FontSize="14"/></Border>
+   <Button Grid.Row="3" x:Name="ContinueButton" Content="Continue" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Center" Click="Continue_Click"/>
+  </Grid>
+  <Grid x:Name="PreparingView" Visibility="Collapsed" MaxWidth="680" Margin="70"><StackPanel VerticalAlignment="Center">
+   <Grid Width="96" Height="96" HorizontalAlignment="Center"><Ellipse Stroke="#272F50" StrokeThickness="7"/><Ellipse Stroke="#7C5CFF" StrokeThickness="7" StrokeDashArray="2.3,1" RenderTransformOrigin=".5,.5"><Ellipse.RenderTransform><RotateTransform x:Name="RingRotation"/></Ellipse.RenderTransform></Ellipse><TextBlock Text="✦" FontSize="30" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/></Grid>
+   <TextBlock x:Name="PreparingTitle" Text="Preparing your organizer..." FontSize="29" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center" Margin="0,26,0,8"/><TextBlock x:Name="PreparingSubtitle" Text="This will only take a moment." FontSize="15" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+   <StackPanel Margin="92,30,92,0"><TextBlock x:Name="StepLanguage" Foreground="#A6ADC8" FontSize="15" Margin="0,8"/><TextBlock x:Name="StepFolders" Foreground="#A6ADC8" FontSize="15" Margin="0,8"/><TextBlock x:Name="StepWatcher" Foreground="#A6ADC8" FontSize="15" Margin="0,8"/><TextBlock x:Name="StepReady" Foreground="#A6ADC8" FontSize="15" Margin="0,8"/></StackPanel>
+  </StackPanel></Grid>
+  <Grid x:Name="CompletedView" Visibility="Collapsed" MaxWidth="680" Margin="70"><StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+   <Border Width="100" Height="100" CornerRadius="50" Background="#203D35" BorderBrush="#4ED7A6" BorderThickness="2"><TextBlock Text="✓" Foreground="#65E6B8" FontSize="52" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+   <TextBlock x:Name="CompletedTitle" FontSize="32" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" HorizontalAlignment="Center" Margin="0,25,0,10"/><TextBlock x:Name="CompletedMessage" TextAlignment="Center" TextWrapping="Wrap" Width="540" FontSize="16" Foreground="{StaticResource TextMuted}"/>
+   <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,30,0,0"><Button x:Name="OpenDownloadsButton" Style="{StaticResource PrimaryButton}" Margin="6" Click="OpenDownloads_Click"/><Button x:Name="FinishButton" Style="{StaticResource PrimaryButton}" Background="#252C46" Margin="6" Click="Finish_Click"/></StackPanel>
+  </StackPanel></Grid>
+ </Grid>
+</Window>

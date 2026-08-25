@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="SmartDownloads/SmartDownloads.csproj" />
+  <Project Path="SmartDownloads.Server/SmartDownloads.Server.csproj" />
+  <Project Path="SmartDownloads.SmokeTests/SmartDownloads.SmokeTests.csproj" />
+</Solution>

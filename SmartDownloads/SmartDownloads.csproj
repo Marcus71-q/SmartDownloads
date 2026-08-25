@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>SmartDownloads</AssemblyName>
+    <SmartDownloadsServerUrl Condition="'$(SmartDownloadsServerUrl)' == ''">https://api.smartdownloads.app</SmartDownloadsServerUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+  <Target Name="GenerateServerConfiguration" BeforeTargets="BeforeCompile">
+    <WriteLinesToFile File="$(IntermediateOutputPath)BuildConfiguration.g.cs" Overwrite="true" Lines="namespace SmartDownloads.Core%3B internal static class BuildConfiguration { internal const string ServerUrl = &quot;$(SmartDownloadsServerUrl)&quot;%3B }" />
+    <ItemGroup><Compile Include="$(IntermediateOutputPath)BuildConfiguration.g.cs" /></ItemGroup>
+  </Target>
+
+</Project>

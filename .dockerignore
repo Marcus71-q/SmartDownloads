@@ -1,0 +1,7 @@
+**/bin
+**/obj
+**/.env.local
+.git
+.vs
+artifacts
+publish
