@@ -17,21 +17,21 @@ try
     Assert(metadata.WindowsDescription is null && metadata.Publisher is null, "Executable internals must not be inspected.");
 
     var organizer = new DownloadOrganizer("en", root);
-    organizer.Start();
     await organizer.ScanNowAsync();
     await organizer.ScanNowAsync();
     Assert(File.Exists(Path.Combine(root, "04_Images", "holiday-photo.jpg")), "Image was not classified correctly.");
     Assert(File.Exists(partial), "Partial download must not be moved.");
+    organizer.Dispose();
 
     var duplicate = Path.Combine(root, "holiday-photo.jpg");
     File.WriteAllText(duplicate, "second-image");
     File.SetLastWriteTimeUtc(duplicate, DateTime.UtcNow.AddMinutes(-2));
-    await organizer.ScanNowAsync();
-    await organizer.ScanNowAsync();
+    using var duplicateOrganizer = new DownloadOrganizer("en", root);
+    await duplicateOrganizer.ScanNowAsync();
+    await duplicateOrganizer.ScanNowAsync();
     Assert(File.Exists(Path.Combine(root, "04_Images", "holiday-photo (2).jpg")), "Duplicate name was overwritten instead of renamed.");
-    Assert(organizer.TryUndoLastMove(), "Last move could not be undone.");
+    Assert(duplicateOrganizer.TryUndoLastMove(), "Last move could not be undone.");
     Assert(File.Exists(duplicate), "Undo did not restore the original path.");
-    organizer.Dispose();
 
     var safeDefaultRoot = Path.Combine(root, "safe-default");
     Directory.CreateDirectory(safeDefaultRoot);
