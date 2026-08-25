@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 - Unreleased
+## 0.2.0 - 2026-08-26
 
 - Process only newly downloaded files by default.
 - Stop moving directories automatically.
