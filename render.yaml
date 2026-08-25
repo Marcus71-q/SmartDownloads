@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: smartdownloads-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./SmartDownloads.Server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DEVICE_TOKEN_SECRET
+        generateValue: true
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: GLOBAL_DAILY_AI_LIMIT
+        value: "50000"

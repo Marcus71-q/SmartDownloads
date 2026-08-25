@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using SmartDownloads.Server.Models;
 using SmartDownloads.Server.Services;
 using System.Threading.RateLimiting;
@@ -9,7 +9,6 @@ EnvFile.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env.local"));
 EnvFile.Load(Path.Combine(Directory.GetCurrentDirectory(), "SmartDownloads.Server", ".env.local"));
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 64 * 1024);
-builder.Services.AddDataProtection().SetApplicationName("SmartDownloads.Server");
 builder.Services.AddMemoryCache(options => options.SizeLimit = 10_000);
 builder.Services.AddHttpClient<GeminiClassifier>(client => { client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/v1beta/"); client.Timeout = TimeSpan.FromSeconds(60); });
 builder.Services.AddSingleton<DeviceTokenService>();
@@ -26,6 +25,11 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("classify", context => RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new TokenBucketRateLimiterOptions { TokenLimit = 20, TokensPerPeriod = 10, ReplenishmentPeriod = TimeSpan.FromMinutes(1), AutoReplenishment = true, QueueLimit = 0 }));
 });
 var app = builder.Build();
+var forwardedHeaders = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto };
+forwardedHeaders.KnownNetworks.Clear();
+forwardedHeaders.KnownProxies.Clear();
+forwardedHeaders.ForwardLimit = 1;
+app.UseForwardedHeaders(forwardedHeaders);
 app.UseExceptionHandler();
 app.Use(async (context, next) =>
 {
